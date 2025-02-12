@@ -266,10 +266,12 @@ type
     procedure SetTabStop(AValue: boolean);
     procedure SetText(AValue: TCaption);
     procedure SetTop(AValue: NativeInt);
-    procedure SetVisible(AValue: boolean);
     procedure SetWidth(AValue: NativeInt);
   protected
     procedure SetBorderStyle(AValue: TBorderStyle);
+    procedure SetVisible(AValue: boolean); virtual;
+    function GetHeight: NativeInt; virtual;
+    function GetWidth: NativeInt; virtual;
   protected
     procedure Click; virtual;
     procedure DblClick; virtual;
@@ -369,10 +371,10 @@ type
   published
     property Cursor: TCursor read FCursor write SetCursor;
     property Left: NativeInt read FLeft write SetLeft;
-    property Height: NativeInt read FHeight write SetHeight;
+    property Height: NativeInt read GetHeight write SetHeight;
     property Hint: string read FHint write SetHint;
     property Top: NativeInt read FTop write SetTop;
-    property Width: NativeInt read FWidth write SetWidth;
+    property Width: NativeInt read GetWidth write SetWidth;
   end;
 
   { TWinControl }
@@ -1184,6 +1186,12 @@ begin
   SetBounds(FLeft, FTop, FWidth, AValue);
 end;
 
+function TControl.GetHeight: NativeInt;
+begin
+  Result := FHeight;
+end;
+
+
 procedure TControl.SetHint(AValue: string);
 begin
   if (FHint <> AValue) then
@@ -1320,6 +1328,11 @@ end;
 procedure TControl.SetWidth(AValue: NativeInt);
 begin
   SetBounds(FLeft, FTop, AValue, FHeight);
+end;
+
+function TControl.GetWidth: NativeInt;
+begin
+  Result := FWidth;
 end;
 
 procedure TControl.Click;
