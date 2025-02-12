@@ -345,6 +345,8 @@ type
     procedure SetState(AValue: TCheckBoxState);
   protected
     procedure DoOnChange; virtual;
+    function GetHeight: NativeInt; override;  {$WARNING Modified by LB}
+    function GetWidth: NativeInt; override;
   protected
     property MarkElement: TJSHTMLInputElement read FMarkElement;
     property LabelElement: TJSHTMLElement read FLabelElement;
@@ -404,6 +406,11 @@ type
     procedure SetWordWrap(AValue: boolean);
   protected
     procedure DoEnter; override;
+    
+    function GetHeight: NativeInt; override; {$WARNING Modified by LB}
+    function GetWidth: NativeInt; override;
+    function GetLeft: NativeInt; override;
+    function GetTop: NativeInt; override;
   protected
     property ContentElement: TJSHTMLTableElement read FContentElement;
     property Alignment: TAlignment read FAlignment write SetAlignment;
@@ -431,8 +438,7 @@ implementation
 uses
   RTLConsts;
 
-procedure ApplyScrollStyleToStyle(aStyle: TJSCSSStyleDeclaration;
-  aScrollStyle: TScrollStyle);
+procedure ApplyScrollStyleToStyle(aStyle: TJSCSSStyleDeclaration; aScrollStyle: TScrollStyle);
 begin
   case aScrollStyle of
     ssNone: begin
@@ -2074,6 +2080,41 @@ begin
   end;
 end;
 
+function TCustomCheckbox.GetHeight: NativeInt;
+var
+  _Height : Integer = 0;
+
+begin
+  Result := 0;
+
+  if hasValue(FLabelElement) then
+    Result := Round(FLabelElement.offsetHeight);
+
+  if hasValue(FMarkElement) then
+    _Height := Round(FMarkElement.offsetHeight);
+
+  if _Height > Result then
+    Result := _Height;
+
+  _Height := inherited GetHeight;
+
+  if _Height > Result then
+    Result := _Height;
+end;
+
+function TCustomCheckbox.GetWidth: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FLabelElement) then
+    Result := Round(FLabelElement.offsetLeft) + Round(FLabelElement.offsetWidth);
+
+  if Result = 0 then
+    Result := inherited GetWidth;
+end;
+
+
+
 function TCustomCheckbox.HandleClick(AEvent: TJSMouseEvent): boolean;
 begin
   SetChecked(FState <> cbChecked);
@@ -2218,6 +2259,52 @@ begin
     FFocusControl.SetFocus;
   end;
 end;
+
+function TCustomLabel.GetHeight: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FContentElement) then
+    Result := Round(FContentElement.offsetHeight);
+
+  if Result = 0 then
+    Result := inherited GetHeight;
+end;
+
+function TCustomLabel.GetWidth: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FContentElement) then
+    Result := Round(FContentElement.offsetWidth);
+
+  if Result = 0 then
+    Result := inherited GetWidth;
+end;
+
+function TCustomLabel.GetLeft: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FContentElement) then
+    Result := Round(FContentElement.offsetLeft);
+
+  if Result = 0 then
+    Result := inherited GetLeft;
+end;
+
+function TCustomLabel.GetTop: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FContentElement) then
+    Result := Round(FContentElement.offsetTop);
+
+  if Result = 0 then
+    Result := inherited GetTop;
+end;
+
+
 
 procedure TCustomLabel.Changed;
 begin
