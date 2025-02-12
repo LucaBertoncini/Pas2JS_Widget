@@ -269,6 +269,7 @@ type
     procedure SetWidth(AValue: NativeInt);
   protected
     procedure SetBorderStyle(AValue: TBorderStyle);
+    // useful in derived components
     procedure SetVisible(AValue: boolean); virtual;
     function GetHeight: NativeInt; virtual;
     function GetWidth: NativeInt; virtual;
