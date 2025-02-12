@@ -35,7 +35,8 @@ uses
   WebExtra,
   Graphics,
   Controls,
-  Forms;
+  Forms,
+  JS;
 
 type
   TEditCharCase = (ecNormal, ecUppercase, ecLowerCase);
@@ -60,9 +61,12 @@ type
     procedure SetItems(AValue: TStrings);
     procedure SetSorted(AValue: boolean);
   private
+    function GetItemIndex: NativeInt;
     procedure ItemsChange(ASender: TObject);
   protected
     procedure Change; virtual;
+    function GetHeight: NativeInt; override;
+    function GetWidth: NativeInt; override;    
   protected
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   protected
@@ -86,7 +90,7 @@ type
     procedure Clear; virtual;
     property DropDownCount: integer read FDropDownCount write SetDropDownCount;
     property ItemHeight: NativeInt read FItemHeight write SetItemHeight;
-    property ItemIndex: NativeInt read FItemIndex write SetItemIndex;
+    property ItemIndex: NativeInt read GetItemIndex write SetItemIndex;
     property Items: TStrings read FItems write SetItems;
     property Sorted: boolean read FSorted write SetSorted;
   end;
@@ -564,6 +568,18 @@ begin
   end;
 end;
 
+function TCustomComboBox.GetItemIndex: Nativeint;
+begin
+  if not hasValue(FItemIndex) then
+  begin
+    if hasValue(FSelectElement) then
+      Self.ItemIndex := TJSHTMLSelectElement(FSelectElement).selectedIndex;
+  end;
+
+  Result := FItemIndex;
+end;
+
+
 procedure TCustomComboBox.ItemsChange(ASender: TObject);
 begin
   Changed;
@@ -576,6 +592,28 @@ begin
     FOnChange(Self);
   end;
 end;
+
+function TCustomComboBox.GetHeight: NativeInt;
+begin
+  Result := 0;
+  if hasValue(FSelectElement) then
+    Result := Round(FSelectElement.offsetHeight);
+
+  if Result = 0 then
+    Result := inherited GetHeight;
+end;
+
+function TCustomComboBox.GetWidth: NativeInt;
+begin
+  Result := 0;
+  if hasValue(FSelectElement) then
+    Result := Round(FSelectElement.offsetWidth);
+
+  if Result = 0 then
+    Result := inherited GetWidth;
+end;
+
+
 
 function TCustomComboBox.HandleChange(AEvent: TJSEvent): boolean;
 begin
@@ -657,7 +695,7 @@ end;
 
 function TCustomComboBox.RealGetText: string;
 begin
-  Result := FItems[FItemIndex];
+  Result := FItems[Self.ItemIndex];
 end;
 
 procedure TCustomComboBox.RealSetText(const AValue: string);
