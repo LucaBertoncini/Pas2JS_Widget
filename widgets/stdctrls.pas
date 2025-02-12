@@ -187,6 +187,12 @@ type
     procedure Change; virtual;
     procedure DoEnter; override;
     procedure DoInput(ANewValue:string); virtual;
+
+    function GetHeight: NativeInt; override;
+    function GetWidth: NativeInt; override;
+    function GetLeft: NativeInt; override;
+    function GetTop: NativeInt; override;
+    
   protected
     function HandleInput(AEvent: TJSEvent): boolean; virtual;
   protected
@@ -204,6 +210,9 @@ type
     constructor Create(AOwner: TComponent); override;
     procedure Clear;
     procedure SelectAll;
+
+    procedure SetFocus; override;
+    
   public
     property Alignment: TAlignment read FAlignment write SetAlignment;
     property CharCase: TEditCharCase read FCharCase write SetCharCase;
@@ -1247,6 +1256,48 @@ begin
   end;
 end;
 
+function TCustomEdit.GetHeight: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FInputElement) then
+    Result := Round(FInputElement.offsetHeight);
+
+  if Result = 0 then
+    Result := inherited GetHeight;
+end;
+
+function TCustomEdit.GetWidth: NativeInt;
+begin
+  Result := 0;
+
+  if hasValue(FInputElement) then
+    Result := Round(FInputElement.offsetWidth);
+
+  if Result = 0 then
+    Result := inherited GetWidth;
+end;
+
+function TCustomEdit.GetLeft: NativeInt;
+begin
+  if hasValue(FInputElement) then
+    Result := Round(FInputElement.offsetLeft);
+
+  if Result = 0 then
+    Result := inherited GetLeft;
+end;
+
+function TCustomEdit.GetTop: NativeInt;
+begin
+  if hasValue(FInputElement) then
+    Result := Round(FInputElement.offsetTop);
+
+  if Result = 0 then
+    Result := inherited GetTop;
+end;
+
+
+
 function TCustomEdit.HandleInput(AEvent: TJSEvent): boolean;
 begin
   AEvent.StopPropagation;
@@ -1355,12 +1406,20 @@ end;
 
 function TCustomEdit.RealGetText: string;
 begin
-  Result := FText;
+  Result := '';
+  if hasValue(FText) then
+    Result := FText
+  else if hasValue(FInputElement) then
+    Result := FInputElement.value;
 end;
 
 procedure TCustomEdit.RealSetText(const AValue: string);
 begin
   FText := AValue;
+  
+  if hasValue(FInputElement) then
+    FInputElement.value := AValue;
+
   FModified := False;
   Changed;
 end;
@@ -1416,6 +1475,15 @@ begin
     end;
   end;
 end;
+
+procedure TCustomEdit.SetFocus;
+begin
+  inherited SetFocus;
+  if hasValue(FInputElement) then
+    FInputElement.focus;
+end;
+
+
 
 type
   TCustomMemoStrings = class(TStringList)
@@ -1688,7 +1756,7 @@ begin
   inherited Changed;
   if (not IsUpdating) and not (csLoading in ComponentState) then
   begin
-    with TJSHTMLTextAreaElement(HandleElement) do
+    with TJSHTMLTextAreaElement(FTextAreaElement) do
     begin
       /// Alignment
       case Alignment of
@@ -1737,8 +1805,10 @@ begin
       end;
       /// Scroll
       Style.SetProperty('overflow', 'auto');
+      
       /// Text
-      Value := RealGetText;
+      if not hasValue(HandleElement) then
+        Value := RealGetText;
     end;
   end;
 end;
@@ -1778,12 +1848,17 @@ end;
 
 function TCustomMemo.RealGetText: string;
 begin
-  Result := FLines.Text;
+  if hasValue(Self.HandleElement) then
+    Result := FTextAreaElement.value
+  else
+    Result := FLines.Text;
 end;
 
 procedure TCustomMemo.RealSetText(const AValue: string);
 begin
   FLines.Text := AValue;
+  if hasValue(HandleElement) then
+    FTextAreaElement.value := AValue;
   FModified := False;
   Changed;
 end;
